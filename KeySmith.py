@@ -17,6 +17,8 @@ import base64
 import platform
 import hashlib
 import os
+import shutil
+import subprocess
 from kivy.core.text import LabelBase
 from kivy.config import Config
 
@@ -26,10 +28,12 @@ Config.set('graphics', 'resizable', '0')
 
 def resource_path(relative_path):
     relative_path = os.path.join("assets", relative_path)
-    try:
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.abspath(".")
+    # try:
+    #     base_path = sys._MEIPASS
+    # except Exception:
+    #     base_path = os.path.abspath(".")
+    base_path = os.path.abspath(".")
+    print(os.path.join(base_path, relative_path))
         
     return os.path.join(base_path, relative_path)
 
@@ -307,13 +311,34 @@ class ResultScreen(Screen):
     def copy_to_clipboard(self):
         text = self.ids.result_input.text
         result_screen = self.manager.get_screen('result')
-        result_screen.ids.result_message.text = f"Password Copied\nIt will be deleted & clipboard will be cleared in 10 seconds!"
-        system = platform.system()
-        
-        try:
-            if system == 'Linux':
-                Clipboard.copy(text)
+        result_screen.ids.result_message.text = (
+            "Password Copied\nIt will be deleted & clipboard will be cleared in 10 seconds!"
+        )
+        system = str(platform.system()).lower()
 
+        try:
+            if system == 'linux':
+                print("gayboy")
+                # Linux: Check for Wayland vs X11
+                if os.environ.get("WAYLAND_DISPLAY"):
+                    if shutil.which("wl-copy") is not None:
+                        subprocess.run(["wl-copy"], input=text, text=True)
+                    elif shutil.which("xclip") is not None:
+                        subprocess.run(["xclip", "-selection", "clipboard"], input=text, text=True)
+                    elif shutil.which("xsel") is not None:
+                        subprocess.run(["xsel", "--clipboard", "--input"], input=text, text=True)
+                    else:
+                        result_screen.ids.result_message.text = "Please install 'wl-clipboard', 'xsel' or 'xclip' to use copy button on Linux."
+                        return
+                else:
+                    # X11 environment
+                    if shutil.which("xclip") is not None:
+                        subprocess.run(["xclip", "-selection", "clipboard"], input=text, text=True)
+                    elif shutil.which("xsel") is not None:
+                        subprocess.run(["xsel", "--clipboard", "--input"], input=text, text=True)
+                    else:
+                        result_screen.ids.result_message.text = "Please install 'xsel' or 'xclip' to use copy button on Linux."
+                        return
             else:
                 Clipboard.put(text)
         except Exception as e:
@@ -329,16 +354,33 @@ class ResultScreen(Screen):
         print(f"\nPlay result:\nname:{text}")
 
     def clear_clipboard(self):
-        system = platform.system()
+        system = str(platform.system()).lower()
+        result_screen = self.manager.get_screen('result')
         try:
-            if system == 'Linux':
-                Clipboard.copy('')
+            if system == 'linux':
+                if os.environ.get("WAYLAND_DISPLAY"):
+                    if shutil.which("wl-copy") is not None:
+                        subprocess.run(["wl-copy"], input="", text=True)
+                    elif shutil.which("xclip") is not None:
+                        subprocess.run(["xclip", "-selection", "clipboard"], input="", text=True)
+                    elif shutil.which("xsel") is not None:
+                        subprocess.run(["xsel", "--clipboard", "--clear"])
+                    else:
+                        result_screen.ids.result_message.text = "Please install 'wl-clipboard', 'xsel' or 'xclip' to use copy button on Linux."
+                        return
+                else:
+                    if shutil.which("xsel") is not None:
+                        subprocess.run(["xsel", "--clipboard", "--clear"])
+                    elif shutil.which("xclip") is not None:
+                        subprocess.run(["xclip", "-selection", "clipboard"], input="", text=True)
+                    else:
+                        result_screen.ids.result_message.text = "Please install 'xsel' or 'xclip' to use copy button on Linux."
+                        return
             else:
                 Clipboard.put('')
         except Exception as e:
             print(f"Error clearing clipboard: {e}")
-        result_screen = self.manager.get_screen('result')
-        result_screen.ids.result_message.text = f"Clipboard cleared & copied password is deleted "
+        result_screen.ids.result_message.text = "Clipboard cleared & copied password is deleted"
         print("Clipboard content erased after 10 seconds")
 
 class ItemRow(RecycleDataViewBehavior, BoxLayout):
