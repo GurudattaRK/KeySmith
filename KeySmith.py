@@ -14,17 +14,18 @@ from kivy.uix.label import Label
 from kivy.metrics import dp
 # from argon2 import low_level, Type
 import base64
-import platform
+# import platform
 import hashlib
 import os
 import shutil
 import subprocess
 from kivy.core.text import LabelBase
 from kivy.config import Config
+from kivy.utils import platform
 
-Config.set('graphics', 'width', '450')
-Config.set('graphics', 'height', '800')
-Config.set('graphics', 'resizable', '0')
+# Config.set('graphics', 'width', '450')
+# Config.set('graphics', 'height', '800')
+# Config.set('graphics', 'resizable', '0')
 
 def resource_path(relative_path):
     relative_path = os.path.join("assets", relative_path)
@@ -39,18 +40,28 @@ def resource_path(relative_path):
 
 LabelBase.register(name="Roboto", fn_regular=resource_path("JetBrainsMono-Medium.ttf"))
 
-info = platform.uname()   
-OS = str(info.system).lower()
-sys=str(platform.system()).lower()
+OS=str(platform).lower()
+
+print("\nRunning on platform:", platform)
+
+if platform == 'android':
+    print("\nApp is running on Android")
+elif platform == 'ios':
+    print("\nApp is running on iOS")
+elif platform in ('win', 'linux', 'macosx'):
+    print("\nApp is running on a desktop platform")
+else:
+    print("\nUnknown platform")
+
 
 if (OS == 'windows') or (OS == 'linux') or (OS == 'macos') or (OS == 'osx') or (OS == 'darwin'):
     print('Desktop:'+OS)
-    print('\nNigger42069:'+sys)
+    print('\nNigger42069:'+OS)
     # Builder.load_file('test.kv')
     Builder.load_file(resource_path('mobile.kv'))
     # Builder.load_file('desktop.kv')
 else:
-    print('\nNigger42069:'+sys)
+    print('\nNigger42069:'+OS)
     print('Mobile:'+OS)
     Builder.load_file(resource_path('mobile.kv'))
 
@@ -314,7 +325,7 @@ class ResultScreen(Screen):
         result_screen.ids.result_message.text = (
             "Password Copied\nIt will be deleted & clipboard will be cleared in 10 seconds!"
         )
-        system = str(platform.system()).lower()
+        system = str(platform).lower()
 
         try:
             if system == 'linux':
@@ -354,7 +365,7 @@ class ResultScreen(Screen):
         print(f"\nPlay result:\nname:{text}")
 
     def clear_clipboard(self):
-        system = str(platform.system()).lower()
+        system = str(platform).lower()
         result_screen = self.manager.get_screen('result')
         try:
             if system == 'linux':
@@ -398,10 +409,11 @@ class KeyForge(App):
 
     def resource_path(self,relative_path):
         relative_path = os.path.join("assets", relative_path)
-        try:
-            base_path = sys._MEIPASS
-        except Exception:
-            base_path = os.path.abspath(".")
+        # try:
+        #     base_path = sys._MEIPASS
+        # except Exception:
+        #     base_path = os.path.abspath(".")
+        base_path = os.path.abspath(".")
 
         return os.path.join(base_path, relative_path)
 
