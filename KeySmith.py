@@ -22,9 +22,8 @@ import subprocess
 from kivy.core.text import LabelBase
 from kivy.config import Config
 from kivy.utils import platform
+from kivy.core.window import Window
 
-# Config.set('graphics', 'width', '450')
-# Config.set('graphics', 'height', '800')
 # Config.set('graphics', 'resizable', '0')
 
 def resource_path(relative_path):
@@ -40,7 +39,13 @@ def resource_path(relative_path):
 
 LabelBase.register(name="Roboto", fn_regular=resource_path("JetBrainsMono-Medium.ttf"))
 
+class GlobalVars:
+    username = StringProperty('')
+    password = StringProperty('')
+    desktop = False
+
 OS=str(platform).lower()
+
 
 print("\nRunning on platform:", platform)
 
@@ -50,15 +55,20 @@ elif platform == 'ios':
     print("\nApp is running on iOS")
 elif platform in ('win', 'linux', 'macosx'):
     print("\nApp is running on a desktop platform")
+    GlobalVars.desktop = True
 else:
     print("\nUnknown platform")
 
 
-if (OS == 'windows') or (OS == 'linux') or (OS == 'macos') or (OS == 'osx') or (OS == 'darwin'):
+if (OS == 'win') or (OS == 'linux') or (OS == 'macos') or (OS == 'osx') or (OS == 'darwin'):
     print('Desktop:'+OS)
     print('\nNigger42069:'+OS)
     # Builder.load_file('test.kv')
-    Builder.load_file(resource_path('mobile.kv'))
+
+    Window.size = (700,600)
+    # Config.set('graphics', 'height', '350')
+
+    Builder.load_file(resource_path('desktop.kv'))
     # Builder.load_file('desktop.kv')
 else:
     print('\nNigger42069:'+OS)
@@ -125,10 +135,6 @@ def generate_password(enable_sets, hex_input):
     return ''.join(password)
 
 
-class GlobalVars:
-    username = StringProperty('')
-    password = StringProperty('')
-
 class WelcomeScreen(Screen):
     keyboard = None
     
@@ -150,19 +156,26 @@ class WelcomeScreen(Screen):
     def toggle_keyboard(self):
 
         if self.keyboard:
+
+            if (GlobalVars.desktop):
+                self.ids.spacer.height = dp(80)
+
             self.ids.intro_image.opacity = 1
             self.remove_widget(self.keyboard)
             self.keyboard = None
             self.ids.keyboard_placeholder.height = 0
         else:
+            if (GlobalVars.desktop):
+                self.ids.spacer.height = dp(10)
+
             self.ids.intro_image.opacity = 0
             self.keyboard = VKeyboard(
                 size_hint_y=None,
-                height=dp(300),
-                layout='qwerty'
+                height=dp(200),
+                layout='qwerty',
             )
             self.keyboard.bind(on_key_up=self.on_keyboard_input)
-            self.ids.keyboard_placeholder.height = dp(300)
+            self.ids.keyboard_placeholder.height = dp(200)
             self.add_widget(self.keyboard)
     
     def on_keyboard_input(self, keyboard, key, *args):
@@ -222,6 +235,10 @@ class RoundedButton(Button):
 
 class ListScreen(Screen):
     def on_enter(self):
+
+        if(GlobalVars.desktop):
+            Window.size = (700,600)
+
         self.ids.rv.data = [
             {'name': item['name'], 'email': item.get('email', ''), 'index': i}
             for i, item in enumerate(App.get_running_app().items)
@@ -231,6 +248,10 @@ class AddItemScreen(Screen):
     slider_value = NumericProperty(2)  
     
     def on_enter(self):
+
+        if(GlobalVars.desktop):
+            Window.size = (700,770)
+
         self.ids.check1.active = True
         self.ids.check2.active = True
         self.ids.check3.active = True
@@ -275,6 +296,10 @@ class EditItemScreen(Screen):
     slider_value = NumericProperty(2)
     
     def on_enter(self):
+
+        if(GlobalVars.desktop):
+            Window.size = (700,770)
+
         app = App.get_running_app()
         if 0 <= self.edit_index < len(app.items):
             item = app.items[self.edit_index]
