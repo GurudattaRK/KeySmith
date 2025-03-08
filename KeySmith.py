@@ -60,7 +60,7 @@ else:
     print("\nUnknown platform")
 
 
-if (OS == 'win') or (OS == 'linux') or (OS == 'macos') or (OS == 'osx') or (OS == 'darwin'):
+if (OS == 'win') or (OS == 'linux') or (OS == 'macosx'):
     print('Desktop:'+OS)
     print('\nNigger42069:'+OS)
     # Builder.load_file('test.kv')
